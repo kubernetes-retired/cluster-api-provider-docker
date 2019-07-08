@@ -1,6 +1,6 @@
 workflow "New workflow" {
   on = "push"
-  resolves = ["./scripts/publish-manager.sh"]
+  resolves = ["deploy image"]
 }
 
 action "Docker Registry" {
@@ -8,8 +8,8 @@ action "Docker Registry" {
   secrets = ["DOCKER_USERNAME", "DOCKER_PASSWORD", "DOCKER_REGISTRY_URL"]
 }
 
-action "push image" {
-  uses = "./actions/push-image/"
+action "deploy image" {
+  uses = "./actions/deploy-image/"
   needs = ["Docker Registry"]
   env = {
     TAG = "latest"
