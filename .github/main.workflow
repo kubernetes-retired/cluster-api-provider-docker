@@ -1,6 +1,6 @@
 workflow "New workflow" {
   on = "push"
-  resolves = ["deploy image"]
+  resolves = ["build"]
 }
 
 action "Docker Registry" {
@@ -8,11 +8,8 @@ action "Docker Registry" {
   secrets = ["DOCKER_USERNAME", "DOCKER_PASSWORD", "DOCKER_REGISTRY_URL"]
 }
 
-action "deploy image" {
-  uses = "./actions/deploy-image/"
-  needs = ["Docker Registry"]
-  env = {
-    TAG = "latest"
-    REGISTRY = "docker.pkg.github.com/kubernetes-sigs/cluster-api-provider-docker"
-  }
+action "build" {
+  uses = "actions/docker/cli@master"
+    needs = ["Docker Registry"]
+  args = "build -t docker.pkg.github.com/kubernetes-sigs/cluster-api-provider-docker:latest ."
 }
