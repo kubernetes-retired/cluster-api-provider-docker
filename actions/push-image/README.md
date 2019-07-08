@@ -1,0 +1,1 @@
+An action to run publish-manager.sh
