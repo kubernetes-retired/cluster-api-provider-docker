@@ -8,8 +8,8 @@ action "Docker Registry" {
   secrets = ["DOCKER_USERNAME", "DOCKER_PASSWORD", "DOCKER_REGISTRY_URL"]
 }
 
-action "./scripts/publish-manager.sh" {
-  uses = "./scripts/publish-manager.sh"
+action "push image" {
+  uses = "./actions/push-image/"
   needs = ["Docker Registry"]
   env = {
     TAG = "latest"
