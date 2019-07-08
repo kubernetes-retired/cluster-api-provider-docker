@@ -1,6 +1,6 @@
 workflow "New workflow" {
   on = "push"
-  resolves = ["build"]
+  resolves = ["push"]
 }
 
 action "Docker Registry" {
