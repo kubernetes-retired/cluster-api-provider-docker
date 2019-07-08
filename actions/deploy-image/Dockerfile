@@ -7,5 +7,5 @@ LABEL "com.github.actions.color"="purple"
 LABEL "repository"="http://github.com/kubernetes-sigs/cluster-api-provider-docker"
 LABEL "maintainer"="Chuck Ha <chuckh@vmware.com>"
 
-ADD entrypoint.sh /
-ENTRYPOINT ["/entrypoint.sh"]
+ADD entrypoint.sh .
+ENTRYPOINT ["./entrypoint.sh"]
