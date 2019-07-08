@@ -10,6 +10,12 @@ action "Docker Registry" {
 
 action "build" {
   uses = "actions/docker/cli@master"
-    needs = ["Docker Registry"]
+  needs = ["Docker Registry"]
   args = "build -t docker.pkg.github.com/kubernetes-sigs/cluster-api-provider-docker:latest ."
+}
+
+action "push" {
+  uses = "actions/docker/cli@master"
+  needs = ["build"]
+  args = "push docker.pkg.github.com/kubernetes-sigs/cluster-api-provider-docker:latest"
 }
