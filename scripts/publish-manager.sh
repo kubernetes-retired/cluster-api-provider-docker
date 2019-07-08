@@ -27,5 +27,6 @@ readonly REGISTRY=${REGISTRY:-$GCR_REGISTRY}
 
 readonly IMAGE=${REGISTRY}/${IMAGE_NAME}:${TAG}
 
+echo $(pwd)
 docker build --file ../Dockerfile -t "${IMAGE}" .
 docker push "${IMAGE}"
