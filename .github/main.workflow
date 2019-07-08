@@ -5,6 +5,7 @@ workflow "New workflow" {
 
 action "Docker Registry" {
   uses = "actions/docker/login@86ff551d26008267bb89ac11198ba7f1d807b699"
+  secrets = ["DOCKER_USERNAME", "DOCKER_PASSWORD", "DOCKER_REGISTRY_URL"]
 }
 
 action "./scripts/publish-manager.sh" {
