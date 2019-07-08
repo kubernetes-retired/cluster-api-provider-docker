@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/sh
 # Copyright 2019 The Kubernetes Authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -27,5 +27,5 @@ readonly REGISTRY=${REGISTRY:-$GCR_REGISTRY}
 
 readonly IMAGE=${REGISTRY}/${IMAGE_NAME}:${TAG}
 
-docker build --file Dockerfile -t "${IMAGE}" .
+docker build --file ./Dockerfile -t "${IMAGE}" .
 docker push "${IMAGE}"
