@@ -27,5 +27,5 @@ readonly REGISTRY=${REGISTRY:-$GCR_REGISTRY}
 
 readonly IMAGE=${REGISTRY}/${IMAGE_NAME}:${TAG}
 
-docker build --file ./Dockerfile -t "${IMAGE}" .
+docker build --file ../Dockerfile -t "${IMAGE}" .
 docker push "${IMAGE}"
