@@ -64,7 +64,7 @@ func main() {
 	setup := flag.NewFlagSet("setup", flag.ExitOnError)
 	managementClusterName := setup.String("cluster-name", "management", "The name of the management cluster")
 	version := setup.String("capi-version", "v0.1.7", "The CRD versions to pull from CAPI. Does not support < v0.1.7.")
-	capdImage := setup.String("capd-image", "gcr.io/kubernetes1-226021/capd-manager:latest", "The capd manager image to run")
+	capdImage := setup.String("capd-image", "docker.pkg.github.com/kubernetes-sigs/cluster-api-provider-docker/manager:master", "The capd manager image to run")
 	capiImage := setup.String("capi-image", "", "This is normally left blank and filled in automatically. But this will override the generated image name.")
 
 	controlPlane := flag.NewFlagSet("control-plane", flag.ExitOnError)
