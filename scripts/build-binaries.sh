@@ -28,6 +28,9 @@ readonly CAPDMGR_SRC=${REPO_PATH}/cmd/capd-manager
 readonly KIND_TEST_BIN=${REPO_PATH}/bin/kind-test
 readonly KIND_TEST_SRC=${REPO_PATH}/cmd/kind-test
 
+readonly CAPI_CHECKER_BIN=${REPO_PATH}/bin/capi-checker
+readonly CAPI_CHECKER_SRC=${REPO_PATH}/cmd/capi-checker
+
 source "${REPO_PATH}/hack/set-workspace-status.sh"
 
 LDFLAGS="-X sigs.k8s.io/cluster-api-provider-docker/cmd/versioninfo.GitBranch=${GIT_BRANCH} \
@@ -44,3 +47,5 @@ go build -ldflags "${LDFLAGS}" -o ${CAPDCTL_BIN} ${CAPDCTL_SRC}
 go build -ldflags "${LDFLAGS}" -o ${CAPDMGR_BIN} ${CAPDMGR_SRC}
 # build kind-test
 go build -ldflags "${LDFLAGS}" -o ${KIND_TEST_BIN} ${KIND_TEST_SRC}
+# capi-checker
+go build -ldflags "${LDFLAGS}" -o ${CAPI_CHECKER_BIN} ${CAPI_CHECKER_SRC}

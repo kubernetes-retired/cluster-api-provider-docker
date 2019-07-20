@@ -23,6 +23,7 @@ import (
 	"os"
 
 	"sigs.k8s.io/cluster-api-provider-docker/cmd/capi-checker/pkg/check"
+	"sigs.k8s.io/cluster-api-provider-docker/cmd/versioninfo"
 )
 
 // Constants
@@ -31,6 +32,7 @@ const (
 )
 
 func main() {
+	fmt.Print("Running ", versioninfo.VersionInfo(`"capi-checker"`))
 	kubeConfigEnv := os.Getenv(KUBECONFIG)
 
 	checkConfig := flag.String("check-yaml", "", "Path to the YAML file with the check configuration")
