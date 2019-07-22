@@ -1,0 +1,31 @@
+before:
+  hooks:
+    - go mod download
+builds:
+- env:
+    - CGO_ENABLED=0
+  main: ./cmd/capdctl/main.go
+  binary: capdctl
+  ldflags:
+    - "-s -w -X sigs.k8s.io/cluster-api-provider-docker/cmd/versioninfo.Version={{.Version}}"
+  goos:
+    - linux
+    - darwin
+  goarch:
+    - amd64
+archives:
+- replacements:
+    darwin: Darwin
+    linux: Linux
+    amd64: x86_64
+checksum:
+  name_template: 'checksums.txt'
+snapshot:
+  name_template: "{{ .Tag }}-next"
+dockers:
+  - goos: linux
+    goarch: amd64
+    image_templates:
+    - "gcr.io/kubernetes1-226021/capd-manager:v{{.Version}}"
+    - "gcr.io/kubernetes1-226021/capd-manager:v{{.Major}}.{{.Minor}}"
+    - "gcr.io/kubernetes1-226021/capd-manager:latest"

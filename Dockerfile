@@ -14,10 +14,10 @@
 
 FROM golang:1.12.6
 WORKDIR /cluster-api-provider-docker
-ADD go.mod .
-ADD go.sum .
+ADD go.mod go.mod
+ADD go.sum go.sum
 RUN go mod download
-RUN  curl -L https://dl.k8s.io/v1.14.3/kubernetes-client-linux-amd64.tar.gz | tar xvz
+RUN  curl -L https://dl.k8s.io/v1.14.4/kubernetes-client-linux-amd64.tar.gz | tar xvz
 ADD cmd cmd
 ADD actuators actuators
 ADD kind kind
