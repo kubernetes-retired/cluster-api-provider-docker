@@ -2,7 +2,9 @@ before:
   hooks:
     - go mod download
 builds:
-- env:
+-
+  id: capdctl
+  env:
     - CGO_ENABLED=0
   main: ./cmd/capdctl/main.go
   binary: capdctl
@@ -11,6 +13,16 @@ builds:
   goos:
     - linux
     - darwin
+  goarch:
+    - amd64
+-
+  id: capd-manager
+  env:
+    - CGO_ENABLED=0
+  main: ./cmd/capd-manager/main.go
+  binary: capd-manager
+  goos:
+    - linux
   goarch:
     - amd64
 archives:
@@ -25,6 +37,8 @@ snapshot:
 dockers:
   - goos: linux
     goarch: amd64
+    binaries:
+    - capd-manager
     image_templates:
     - "gcr.io/kubernetes1-226021/capd-manager:v{{.Version}}"
     - "gcr.io/kubernetes1-226021/capd-manager:v{{.Major}}.{{.Minor}}"
