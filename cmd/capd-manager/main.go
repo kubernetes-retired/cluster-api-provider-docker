@@ -1,5 +1,4 @@
 /*
-Copyright 2019 The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -19,93 +18,61 @@ package main
 import (
 	"flag"
 	"os"
-	"time"
 
-	"k8s.io/client-go/kubernetes"
-	"k8s.io/klog"
-	"k8s.io/klog/klogr"
-	"sigs.k8s.io/cluster-api-provider-docker/actuators"
-	"sigs.k8s.io/cluster-api-provider-docker/cmd/versioninfo"
-	"sigs.k8s.io/cluster-api/pkg/apis"
-	"sigs.k8s.io/cluster-api/pkg/apis/cluster/common"
-	"sigs.k8s.io/cluster-api/pkg/client/clientset_generated/clientset"
-	capicluster "sigs.k8s.io/cluster-api/pkg/controller/cluster"
-	capimachine "sigs.k8s.io/cluster-api/pkg/controller/machine"
-	"sigs.k8s.io/controller-runtime/pkg/client/config"
-	"sigs.k8s.io/controller-runtime/pkg/manager"
-	"sigs.k8s.io/controller-runtime/pkg/runtime/signals"
+	"k8s.io/apimachinery/pkg/runtime"
+	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
+	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
+	infrastructurev1alpha1 "sigs.k8s.io/cluster-api-provider-docker/api/v1alpha1"
+	"sigs.k8s.io/cluster-api-provider-docker/controllers"
+	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/log/zap"
+	// +kubebuilder:scaffold:imports
 )
 
+var (
+	scheme   = runtime.NewScheme()
+	setupLog = ctrl.Log.WithName("setup")
+)
+
+func init() {
+	_ = clientgoscheme.AddToScheme(scheme)
+
+	_ = infrastructurev1alpha1.AddToScheme(scheme)
+	// +kubebuilder:scaffold:scheme
+}
+
 func main() {
-	// Must set up klog for the cluster api loggers
-	klog.InitFlags(nil)
+	var metricsAddr string
+	var enableLeaderElection bool
+	flag.StringVar(&metricsAddr, "metrics-addr", ":8080", "The address the metric endpoint binds to.")
+	flag.BoolVar(&enableLeaderElection, "enable-leader-election", false,
+		"Enable leader election for controller manager. Enabling this will ensure there is only one active controller manager.")
 	flag.Parse()
 
-	log := klogr.New()
-	setupLogger := log.WithName("setup")
+	ctrl.SetLogger(zap.Logger(true))
 
-	cfg, err := config.GetConfig()
+	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
+		Scheme:             scheme,
+		MetricsBindAddress: metricsAddr,
+		LeaderElection:     enableLeaderElection,
+	})
 	if err != nil {
-		setupLogger.Error(err, "failed to get cluster config")
+		setupLog.Error(err, "unable to start manager")
 		os.Exit(1)
 	}
 
-	// Setup a Manager
-	syncPeriod := 10 * time.Minute
-	opts := manager.Options{
-		SyncPeriod: &syncPeriod,
-	}
-
-	mgr, err := manager.New(cfg, opts)
-	if err != nil {
-		setupLogger.Error(err, "failed to create a manager")
+	if err = (&controllers.DockerMachineReconciler{
+		Client: mgr.GetClient(),
+		Log:    ctrl.Log.WithName("controllers").WithName("DockerMachine"),
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "DockerMachine")
 		os.Exit(1)
 	}
-	k8sclientset, err := kubernetes.NewForConfig(cfg)
-	if err != nil {
-		setupLogger.Error(err, "failed to get a kubernetes clientset")
-		os.Exit(1)
-	}
-	cs, err := clientset.NewForConfig(cfg)
-	if err != nil {
-		setupLogger.Error(err, "failed to get a cluster api clientset")
-		os.Exit(1)
-	}
+	// +kubebuilder:scaffold:builder
 
-	clusterLogger := klogr.New().WithName("cluster-actuator")
-	clusterActuator := actuators.Cluster{
-		Log: clusterLogger,
-	}
-
-	machineLogger := klogr.New().WithName("machine-actuator")
-	machineActuator := actuators.Machine{
-		Core:       k8sclientset.CoreV1(),
-		ClusterAPI: cs.ClusterV1alpha1(),
-		Log:        machineLogger,
-	}
-
-	// Register our cluster deployer (the interface is in clusterctl and we define the Deployer interface on the actuator)
-	common.RegisterClusterProvisioner("docker", clusterActuator)
-	if err := apis.AddToScheme(mgr.GetScheme()); err != nil {
-		setupLogger.Error(err, "failed to apply cluster API types to our scheme")
-		os.Exit(1)
-	}
-
-	if err := capimachine.AddWithActuator(mgr, &machineActuator); err != nil {
-		setupLogger.Error(err, "failed to install the machine actuator")
-		os.Exit(1)
-	}
-	if err := capicluster.AddWithActuator(mgr, &clusterActuator); err != nil {
-		setupLogger.Error(err, "failed to install the cluster actuator")
-		os.Exit(1)
-	}
-
-	setupLogger.Info("starting the manager")
-	setupLogger.Info("Starting the controller")
-	setupLogger.Info(versioninfo.VersionInfo("capd-manager"))
-
-	if err := mgr.Start(signals.SetupSignalHandler()); err != nil {
-		setupLogger.Error(err, "failed to start the manager")
+	setupLog.Info("starting manager")
+	if err := mgr.Start(ctrl.SetupSignalHandler()); err != nil {
+		setupLog.Error(err, "problem running manager")
 		os.Exit(1)
 	}
 }

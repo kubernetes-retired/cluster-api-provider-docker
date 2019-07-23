@@ -20,12 +20,12 @@ import (
 	core "k8s.io/api/core/v1"
 	rbac "k8s.io/api/rbac/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
-	capi "sigs.k8s.io/cluster-api/pkg/apis/cluster/v1alpha1"
+	clusterapiv1alpha2 "sigs.k8s.io/cluster-api/pkg/apis/cluster/v1alpha2"
 )
 
 const clusterRoleName = "docker-provider-manager-role"
 
-// GetClusterRole returns the cluster role capi needs to function properly
+// GetClusterRole returns the cluster role clusterapiv1alpha2 needs to function properly
 func GetClusterRole() rbac.ClusterRole {
 	return rbac.ClusterRole{
 		ObjectMeta: meta.ObjectMeta{
@@ -34,7 +34,7 @@ func GetClusterRole() rbac.ClusterRole {
 		Rules: []rbac.PolicyRule{
 			{
 				APIGroups: []string{
-					capi.SchemeGroupVersion.Group,
+					clusterapiv1alpha2.SchemeGroupVersion.Group,
 				},
 				Resources: []string{
 					"clusters",
@@ -52,7 +52,7 @@ func GetClusterRole() rbac.ClusterRole {
 			},
 			{
 				APIGroups: []string{
-					capi.SchemeGroupVersion.Group,
+					clusterapiv1alpha2.SchemeGroupVersion.Group,
 				},
 				Resources: []string{
 					"machines",
