@@ -3,20 +3,9 @@ workflow "Release" {
   resolves = ["push images"]
 }
 
-action "Setup Google Cloud" {
-  uses = "actions/gcloud/auth@master"
-  secrets = ["GCLOUD_AUTH"]
-}
-
 action "is-tag" {
   uses = "actions/bin/filter@master"
   args = "tag"
-}
-
-action "Set Credential Helper for Docker" {
-  needs = ["Setup Google Cloud"]
-  uses = "actions/gcloud/cli@master"
-  args = ["auth", "configure-docker", "--quiet"]
 }
 
 action "goreleaser" {
@@ -38,6 +27,18 @@ action "tag images" {
   needs = ["docker build"]
 }
 
+action "Setup Google Cloud" {
+  uses = "actions/gcloud/auth@master"
+  secrets = ["GCLOUD_AUTH"]
+  needs = ["tag images"]
+}
+
+action "Set Credential Helper for Docker" {
+  uses = "actions/gcloud/cli@master"
+  args = ["auth", "configure-docker", "--quiet"]
+  needs = ["Setup Google Cloud"]
+}
+
 action "push images" {
   uses = "actions/docker/cli@master"
   runs = "sh -c"
@@ -45,5 +46,5 @@ action "push images" {
     IMAGE_NAME = "gcr.io/kubernetes1-226021/capd-manager"
   }
   args = ["source $HOME/.profile && docker push $IMAGE_NAME:latest && docker push $IMAGE_NAME:$IMAGE_REF && docker push $IMAGE_NAME:$IMAGE_SHA && docker push $IMAGE_NAME:$IMAGE_VERSION"]
-  needs = ["tag images", "Set Credential Helper for Docker"]
+  needs = ["Set Credential Helper for Docker"]
 }
