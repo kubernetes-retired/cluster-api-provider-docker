@@ -28,13 +28,13 @@ action "goreleaser" {
 
 action "docker build" {
   uses = "actions/docker/cli@master"
-  args = "build -t capd-manager ."
+  args = "build -t manager ."
   needs = ["goreleaser"]
 }
 
 action "tag images" {
   uses = "actions/docker/tag@master"
-  args = "capd-manager gcr.io/kubernetes1-226021/capd-manager"
+  args = "manager gcr.io/kubernetes1-226021/manager"
   needs = ["docker build"]
 }
 
@@ -42,7 +42,7 @@ action "push images" {
   uses = "actions/docker/cli@master"
   runs = "sh -c"
   env = {
-    IMAGE_NAME = "gcr.io/kubernetes1-226021/capd-manager"
+    IMAGE_NAME = "gcr.io/kubernetes1-226021/manager"
   }
   args = "source $HOME/.profile && docker push $IMAGE_NAME:latest && docker push $IMAGE_NAME:$IMAGE_REF && docker push $IMAGE_NAME:$IMAGE_SHA && docker push $IMAGE_NAME:$IMAGE_VERSION"
   needs = ["tag images", "Set Credential Helper for Docker"]

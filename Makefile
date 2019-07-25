@@ -1,7 +1,7 @@
 
 REGISTRY ?= gcr.io/$(shell gcloud config get-value project)
 # Image URL to use all building/pushing image targets
-IMAGE_NAME ?= capd-manager
+IMAGE_NAME ?= manager
 IMAGE_TAG ?= dev
 IMG ?= $(REGISTRY)/$(IMAGE_NAME):$(IMAGE_TAG)
 
@@ -23,11 +23,11 @@ test: generate fmt vet manifests
 
 # Build manager binary
 manager: generate fmt vet
-	go build -o bin/capd-manager cmd/capd-manager/main.go
+	go build -o bin/manager cmd/manager/main.go
 
 # Run against the configured Kubernetes cluster in ~/.kube/config
 run: generate fmt vet
-	go run ./cmd/capd-manager/main.go
+	go run ./cmd/manager/main.go
 
 # Install CRDs into a cluster
 install: manifests
