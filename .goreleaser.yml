@@ -19,11 +19,11 @@ builds:
   goarch:
     - amd64
 -
-  id: capd-manager
+  id: manager
   env:
     - CGO_ENABLED=0
-  main: ./cmd/capd-manager/main.go
-  binary: capd-manager
+  main: ./cmd/manager/main.go
+  binary: manager
   goos:
     - linux
   goarch:

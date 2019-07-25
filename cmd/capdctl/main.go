@@ -25,6 +25,7 @@ import (
 
 	"github.com/pkg/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
+	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/cluster-api-provider-docker/cmd/versioninfo"
 	"sigs.k8s.io/cluster-api-provider-docker/kind/controlplane"
 	"sigs.k8s.io/cluster-api-provider-docker/objects"
@@ -36,6 +37,22 @@ const (
 	controlPlaneSet = "controlplane"
 	capdctl         = "capdctl"
 )
+
+type managementClusterOptions struct {
+	clusterName                 *string
+	capiRef, bpRef, ipRef       *string
+	ipImage, bpImage, capiImage *string
+}
+
+func (mco *managementClusterOptions) initFlags(fs *flag.FlagSet) {
+	mco.clusterName = fs.String("cluster-name", "management", "the name of the management cluster")
+	mco.bpRef = fs.String("bp-ref", "master", "the git ref of the bootstrap provider to use")
+	mco.bpImage = fs.String("bp-image", "", "a custom image to use for the bootstrap provider manager")
+	mco.capiRef = fs.String("capi-ref", "master", "the git ref of capi to use")
+	mco.capiImage = fs.String("capi-image", "", "a custom image to use for the cluster api manager")
+	mco.ipRef = fs.String("ip-ref", "master", "the git ref of the infrastructure provider to use")
+	mco.ipImage = fs.String("ip-image", "", "a custom image to use for the infrastructure provider manager")
+}
 
 type machineOptions struct {
 	name, namespace, clusterName, set, version *string
@@ -63,12 +80,9 @@ func (mo *machineDeploymentOptions) initFlags(fs *flag.FlagSet) {
 }
 
 func main() {
-	setup := flag.NewFlagSet("setup", flag.ExitOnError)
-	managementClusterName := setup.String("cluster-name", "management", "The name of the management cluster")
-	capiVersion := setup.String("capi-version", "v0.1.7", "The CRD versions to pull from CAPI. Does not support < v0.1.7.")
-	capdImage := setup.String("capd-image", "gcr.io/kubernetes1-226021/capd-manager:dev", "The capd manager image to run")
-	capiImage := setup.String("capi-image", "", "This is normally left blank and filled in automatically. But this will override the generated image name.")
-	bpImage := setup.String("bp-image", "", "the image to the bootstrap provider")
+	mgmtCluster := flag.NewFlagSet("management-cluster", flag.ExitOnError)
+	mgmtClusterOpts := new(managementClusterOptions)
+	mgmtClusterOpts.initFlags(mgmtCluster)
 
 	controlPlane := flag.NewFlagSet("control-plane", flag.ExitOnError)
 	controlPlaneOpts := new(machineOptions)
@@ -96,16 +110,11 @@ func main() {
 
 	switch os.Args[1] {
 	case "setup":
-		if err := setup.Parse(os.Args[2:]); err != nil {
+		if err := mgmtCluster.Parse(os.Args[2:]); err != nil {
 			fmt.Printf("%+v\n", err)
 			os.Exit(1)
 		}
-		if err := makeManagementCluster(*managementClusterName, *capiVersion, *capdImage, *capiImage, *bpImage); err != nil {
-			fmt.Printf("%+v\n", err)
-			os.Exit(1)
-		}
-	case "apply":
-		if err := applyControlPlane(*managementClusterName, *capiVersion, *capiImage, *capdImage); err != nil {
+		if err := makeManagementCluster(mgmtClusterOpts); err != nil {
 			fmt.Printf("%+v\n", err)
 			os.Exit(1)
 		}
@@ -175,7 +184,7 @@ subcommands are:
     example: capdctl crds | kubectl apply -f -
 
   capd - Write capd kubernetes components that run necessary managers to stdout
-    example: capdctl capd -capd-image gcr.io/kubernetes1-226021/capd-manager:latest -capi-image gcr.io/k8s-cluster-api/cluster-api-controller:0.1.2 | kubectl apply -f -
+    example: capdctl capd -capd-image gcr.io/kubernetes1-226021/manager:latest -capi-image gcr.io/k8s-cluster-api/cluster-api-controller:0.1.2 | kubectl apply -f -
 
   control-plane - Write a capd control plane machine to stdout
     example: capdctl control-plane -name my-control-plane -namespace my-namespace -cluster-name my-cluster -version v1.14.1 | kubectl apply -f -
@@ -219,30 +228,23 @@ func machineDeploymentYAML(opts *machineDeploymentOptions) (string, error) {
 		return "", errors.WithStack(err)
 	}
 	return string(b), nil
-
 }
 
-func makeManagementCluster(clusterName, capiVersion, capdImage, capiImageOverride, bpImage string) error {
-	fmt.Println("Creating a brand new cluster")
-	capiImage := fmt.Sprintf("us.gcr.io/k8s-artifacts-prod/cluster-api/cluster-api-controller:%s", capiVersion)
-	if capiImageOverride != "" {
-		capiImage = capiImageOverride
-	}
-
-	if err := controlplane.CreateKindCluster(capiImage, clusterName); err != nil {
-		return err
-	}
-
-	return applyControlPlane(clusterName, capiVersion, capiImage, capdImage)
-}
-
-func applyControlPlane(clusterName, capiVersion, capiImage, capdImage string) error {
-	fmt.Println("Downloading the latest CRDs for CAPI version", capiVersion)
-	objs, err := objects.GetManegementCluster(capiVersion, capiImage, capdImage)
+func makeManagementCluster(options *managementClusterOptions) error {
+	objs, err := objects.GetManagementCluster(*options.capiImage, *options.capiRef, *options.ipImage, *options.ipRef, *options.bpImage, *options.bpRef)
 	if err != nil {
 		return err
 	}
+	fmt.Println("Creating a brand new cluster")
 
+	if err := controlplane.CreateKindCluster(*options.clusterName); err != nil {
+		return err
+	}
+
+	return applyControlPlane(*options.clusterName, objs)
+}
+
+func applyControlPlane(clusterName string, objs []runtime.Object) error {
 	fmt.Println("Applying the control plane")
 
 	cfg, err := controlplane.GetKubeconfig(clusterName)
@@ -255,7 +257,20 @@ func applyControlPlane(clusterName, capiVersion, capiImage, capdImage string) er
 		return err
 	}
 
-	for _, obj := range objs {
+	namespaces, rest := extractNamespaces(objs)
+	for _, ns := range namespaces {
+		accessor, err := meta.Accessor(ns)
+		if err != nil {
+			return err
+		}
+		fmt.Printf("creating %q %q\n", ns.GetObjectKind().GroupVersionKind().String(), accessor.GetName())
+
+		if err := client.Create(context.Background(), ns); err != nil {
+			return err
+		}
+	}
+
+	for _, obj := range rest {
 		accessor, err := meta.Accessor(obj)
 		if err != nil {
 			return err
@@ -267,4 +282,19 @@ func applyControlPlane(clusterName, capiVersion, capiImage, capdImage string) er
 		}
 	}
 	return nil
+}
+
+func extractNamespaces(objects []runtime.Object) ([]runtime.Object, []runtime.Object) {
+	ns := make([]runtime.Object, 0)
+	rest := make([]runtime.Object, 0)
+	for _, object := range objects {
+		k := object.GetObjectKind()
+		vk := k.GroupVersionKind()
+		if vk.Kind == "Namespace" {
+			ns = append(ns, object)
+			continue
+		}
+		rest = append(rest, object)
+	}
+	return ns, rest
 }

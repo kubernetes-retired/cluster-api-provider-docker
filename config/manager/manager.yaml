@@ -29,6 +29,11 @@ spec:
         - --enable-leader-election
         image: controller:latest
         name: manager
+        volumeMounts:
+          - mountPath: /var/run/docker.sock
+            name: dockersock
+          - mountPath: /var/lib/docker
+            name: dockerlib
         resources:
           limits:
             cpu: 100m
@@ -36,4 +41,14 @@ spec:
           requests:
             cpu: 100m
             memory: 20Mi
+        securityContext:
+          privileged: true
       terminationGracePeriodSeconds: 10
+      volumes:
+        - name: dockersock
+          hostPath:
+            path: /var/run/docker.sock
+            type: Socket
+        - name: dockerlib
+          hostPath:
+            path: /var/lib/docker

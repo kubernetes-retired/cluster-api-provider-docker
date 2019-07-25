@@ -17,4 +17,5 @@ require (
 	sigs.k8s.io/cluster-api v0.0.0-20190723184414-6afa7aee7f42
 	sigs.k8s.io/controller-runtime v0.2.0-beta.4
 	sigs.k8s.io/kind v0.4.0
+	sigs.k8s.io/kustomize/v3 v3.0.2
 )
