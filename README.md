@@ -37,7 +37,7 @@ Alternatively, run: `REGISTRY=<MY_REGISTRY> ./scripts/publish-manager.sh`
 
 ## Trying CAPD
 
-Tested on: Linux, works ok on OS X sometimes
+Tested on Linux and MacOS with [v0.1.3](https://github.com/kubernetes-sigs/cluster-api-provider-docker/releases/tag/v0.1.3).
 
 Make sure you have `kubectl`.
 
@@ -62,6 +62,9 @@ Make sure you have `kubectl`.
 The kubeconfig is on the management cluster in secrets. Grab it and write it to a file:
 
 `kubectl get secrets -o jsonpath='{.data.value}' my-cluster-kubeconfig | base64 --decode > ~/.kube/kind-config-my-cluster`
+
+On **MacOS**, you need to manually update the server address in the kubeconfig to point to the cluster load-balancer:
+`sed -i -e "s/server:.*/server: https:\/\/$(docker port my-cluster-external-load-balancer 6443 | sed "s/0.0.0.0/127.0.0.1/")/g" ~/.kube/kind-config-my-cluster`
 
 Look at the pods in your new worker cluster:
 `kubectl get po --all-namespaces --kubeconfig ~/.kube/kind-config-my-cluster`
