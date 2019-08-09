@@ -73,7 +73,7 @@ type platformOptions struct {
 
 func (po *platformOptions) initFlags(fs *flag.FlagSet) {
 	po.capiVersion = fs.String("capi-version", "v0.1.8", "The CRD versions to pull from CAPI. Does not support < v0.1.8.")
-	po.capdImage = fs.String("capd-image", "gcr.io/kubernetes1-226021/capd-manager:latest", "The capd manager image to run")
+	po.capdImage = fs.String("capd-image", "gcr.io/kubernetes1-226021/capd-manager:v0.1", "The capd manager image to run")
 	po.capiImage = fs.String("capi-image", "", "This is normally left blank and filled in automatically. But this will override the generated image name.")
 }
 
