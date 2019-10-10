@@ -1,9 +1,13 @@
 # Cluster API Provider Docker (CAPD)
 
-This project is a small part of the Cluster API project.
+CAPD is a reference implementation of an infrastructure provider for the Cluster API project using Docker.
 
 This is one out of three components needed to run a Cluster API management cluster.
 
-To get a complete overview, look at the documentation in the bootstrap provider that uses CAPD as an example infrastructure provider.
+For a complete overview, please refer to the documentation available [here](https://github.com/kubernetes-sigs/cluster-api-bootstrap-provider-kubeadm#cluster-api-bootstrap-provider-kubeadm) which uses CAPD as an example infrastructure provider.
 
-https://github.com/kubernetes-sigs/cluster-api-bootstrap-provider-kubeadm#cluster-api-bootstrap-provider-kubeadm
+## CAPD Goals
+
+* To be a the reference implementation of an infrastructure provider.
+* The code is highly trusted and used in testing of ClusterAPI.
+* This provider can be used as a guide for developers looking to implement their own infrastructure provider.
