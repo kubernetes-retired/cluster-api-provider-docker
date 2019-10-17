@@ -1,3 +1,7 @@
+# ⚠️ Legacy repository. Current code has moved
+
+## This repository is only accepting bug fixes. All new development is being done in the [cluster-api](https://github.com/kubernetes-sigs/cluster-api/tree/master/test/infrastructure/docker) repository.
+
 # Cluster API Provider Docker (CAPD)
 
 CAPD is a reference implementation of an infrastructure provider for the Cluster API project using Docker.
