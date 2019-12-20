@@ -1,0 +1,18 @@
+{
+  "name": "kubeadm",
+  "config": {
+    "image": "gcr.io/k8s-staging-capi-docker/capd-manager",
+    "live_reload_deps": [
+      "main.go",
+      "go.mod",
+      "go.sum",
+      "api",
+      "cloudinit",
+      "controllers",
+      "docker",
+      "third_party"
+    ]
+  },
+  "additional_docker_helper_commands": "RUN wget -qO- https: //dl.k8s.io/v1.14.4/kubernetes-client-linux-amd64.tar.gz | tar xvz\nRUN wget -qO- https: //get.docker.com | sh",
+  "additional_docker_build_commands": "COPY --from=tilt-helper /usr/bin/docker /usr/bin/docker\nCOPY --from=tilt-helper /go/kubernetes/client/bin/kubectl /usr/bin/kubectl"
+}
